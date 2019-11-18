@@ -7,6 +7,8 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       StageName: dev
+      Auth:
+        ApiKeyRequired: true
     
   HelloFunction:
     Type: 'AWS::Serverless::Function'
@@ -21,7 +23,38 @@ Resources:
             RestApiId: !Ref MyApi
             Path: /hello
             Method: GET
-  
+
+  ApiKey:
+    Type: 'AWS::ApiGateway::ApiKey'
+    Properties:
+      Description: CloudFormation API Key for testing
+      Enabled: 'true'
+      StageKeys:
+        - RestApiId: !Ref MyApi
+          StageName: dev
+
+  UsagePlan:
+    Type: 'AWS::ApiGateway::UsagePlan'
+    Properties:
+      ApiStages:
+        - ApiId: !Ref MyApi
+          Stage: dev
+      Description: Customer ABC's usage plan
+      Quota:
+        Limit: 5000
+        Period: MONTH
+      Throttle:
+        BurstLimit: 200
+        RateLimit: 100
+      UsagePlanName: Test-User-Plan1
+
+  UsagePlanKey:
+    Type: 'AWS::ApiGateway::UsagePlanKey'
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref UsagePlan
+      
 Outputs:
   Region:
     Description: "Region"
